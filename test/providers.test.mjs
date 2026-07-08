@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { classifyAsset } from "../src/lib/classify.mjs";
 import { validateTokenList } from "../src/schema.mjs";
 
 test("validator accepts a minimal token list", () => {
@@ -9,6 +10,7 @@ test("validator accepts a minimal token list", () => {
       id: "demo:1:0x0000000000000000000000000000000000000001",
       provider: "demo",
       symbol: "DEMO",
+      assetType: "equity",
       chainId: 1,
       address: "0x0000000000000000000000000000000000000001",
       decimals: 18,
@@ -25,6 +27,7 @@ test("validator rejects duplicate ids", () => {
     id: "demo:1:0x0000000000000000000000000000000000000001",
     provider: "demo",
     symbol: "DEMO",
+    assetType: "equity",
     chainId: 1,
     address: "0x0000000000000000000000000000000000000001",
     decimals: 18,
@@ -36,3 +39,11 @@ test("validator rejects duplicate ids", () => {
   assert(errors.some((error) => error.includes("duplicates")));
 });
 
+test("classifier identifies ETFs and commodity products", () => {
+  assert.equal(classifyAsset({ symbol: "SPYx", name: "SP500 xStock" }), "etf");
+  assert.equal(classifyAsset({ symbol: "QQQon", name: "Invesco QQQ" }), "etf");
+  assert.equal(classifyAsset({ symbol: "GLDx", name: "Gold xStock" }), "commodity");
+  assert.equal(classifyAsset({ symbol: "SLV", name: "iShares Silver Trust" }), "commodity");
+  assert.equal(classifyAsset({ symbol: "GDXx", name: "VanEck Gold Miners xStock" }), "etf");
+  assert.equal(classifyAsset({ symbol: "NVDAon", name: "NVIDIA Corporation Common Stock" }), "equity");
+});

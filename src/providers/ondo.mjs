@@ -1,4 +1,5 @@
 import { fetchText } from "../lib/http.mjs";
+import { classifyAsset } from "../lib/classify.mjs";
 import { makeToken, uniqueById } from "../lib/normalize.mjs";
 
 const SITEMAP_URL = "https://app.ondo.finance/sitemap.xml";
@@ -24,7 +25,7 @@ function parseAssetPage(html, sourceUrl, fetchedAt) {
     symbol,
     name: underlyingName ? `${underlyingName} Ondo Stock Token` : `${symbol} Ondo Stock Token`,
     underlyingSymbol: ticker,
-    assetType: "equity",
+    assetType: classifyAsset({ name: underlyingName, symbol }),
     tokenStandard: network.network === "SOLANA" ? "SPL" : "ERC-20",
     chainId: network.chainId,
     network: network.network,
@@ -75,4 +76,3 @@ export async function fetchOndoSeedAssets() {
     tokens: uniqueById(tokens),
   };
 }
-

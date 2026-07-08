@@ -1,6 +1,6 @@
 # Setwise Token List
 
-Canonical token metadata for tokenized equities and ETFs.
+Canonical token metadata for tokenized equities, ETFs, commodities, currencies, and crypto assets.
 
 The goal of this repo is deliberately boring and very useful: never trust a token symbol by itself.
 Every record is keyed by provider, chain, and contract address, with source URLs and confidence
@@ -53,6 +53,14 @@ Each token record contains:
 - `sourceType`
 - `confidence`
 - `fetchedAt`
+
+`assetType` is normalized to one of:
+
+- `equity`
+- `etf`
+- `commodity`
+- `currency`
+- `crypto`
 
 ## Confidence levels
 

@@ -12,6 +12,9 @@ export function validateTokenList(tokenList) {
         errors.push(`${prefix}.${field} is required`);
       }
     }
+    if (!["commodity", "crypto", "currency", "equity", "etf"].includes(token.assetType)) {
+      errors.push(`${prefix}.assetType must be one of commodity, crypto, currency, equity, etf`);
+    }
     if (ids.has(token.id)) errors.push(`${prefix}.id duplicates ${token.id}`);
     ids.add(token.id);
     if (typeof token.chainId !== "number") errors.push(`${prefix}.chainId must be a number`);
@@ -23,4 +26,3 @@ export function validateTokenList(tokenList) {
 
   return errors;
 }
-

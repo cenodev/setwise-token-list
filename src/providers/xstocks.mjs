@@ -1,4 +1,5 @@
 import { fetchText } from "../lib/http.mjs";
+import { classifyAsset } from "../lib/classify.mjs";
 import { makeToken, uniqueById } from "../lib/normalize.mjs";
 
 const PRODUCTS_URL = "https://xstocks.fi/products";
@@ -54,7 +55,7 @@ export async function fetchXStocks() {
       symbol: product.symbol,
       name: product.name,
       underlyingSymbol: product.symbol.replace(/x$/u, ""),
-      assetType: "equity",
+      assetType: classifyAsset(product),
       tokenStandard: tokenStandardForNetwork(network),
       chainId,
       network,
@@ -74,4 +75,3 @@ export async function fetchXStocks() {
     tokens: uniqueById(tokens),
   };
 }
-

@@ -1,4 +1,5 @@
 import { fetchText } from "../lib/http.mjs";
+import { classifyAsset } from "../lib/classify.mjs";
 import { makeToken, uniqueById } from "../lib/normalize.mjs";
 
 const CONTRACTS_URL = "https://docs.robinhood.com/chain/contracts";
@@ -34,7 +35,7 @@ function parseTokenTable(markdown, fetchedAt) {
       symbol,
       name: `${symbol} Robinhood Stock Token`,
       underlyingSymbol: symbol,
-      assetType: "equity",
+      assetType: classifyAsset({ symbol }),
       tokenStandard: "ERC-20",
       chainId: 4663,
       chainName: "Robinhood Chain",
