@@ -1,7 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { fetchBStocks } from "./providers/bstocks.mjs";
 import { fetchOndo, fetchOndoSeedAssets } from "./providers/ondo.mjs";
+import { fetchPaxosGold } from "./providers/paxos.mjs";
 import { fetchRobinhood } from "./providers/robinhood.mjs";
+import { fetchTetherGold } from "./providers/tether.mjs";
 import { fetchXStocks } from "./providers/xstocks.mjs";
 import { validateTokenList } from "./schema.mjs";
 
@@ -12,6 +14,8 @@ async function main() {
     fetchXStocks(),
     fetchRobinhood(),
     fetchBStocks(),
+    fetchTetherGold(),
+    fetchPaxosGold(),
   ]);
 
   const generatedAt = new Date().toISOString();

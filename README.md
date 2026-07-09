@@ -15,6 +15,8 @@ Initial provider adapters:
 - `robinhood` — fetched from Robinhood Chain token-contract docs.
 - `bstocks` — fetched from available bStock listing data; currently lower confidence until a
   first-party Binance/issuer token registry is added.
+- `tether` — includes Tether Gold `XAUT` and official XAUt0 deployment data.
+- `paxos` — includes Pax Gold `PAXG`.
 
 ## Usage
 

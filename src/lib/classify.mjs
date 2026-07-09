@@ -1,8 +1,13 @@
 const COMMODITY_SYMBOLS = new Set([
   "GLD",
   "GLDx",
+  "PAXG",
   "SLV",
   "SLVx",
+  "XAUT",
+  "XAUt",
+  "XAUt0",
+  "XAUT0",
 ]);
 
 const CURRENCY_SYMBOLS = new Set([

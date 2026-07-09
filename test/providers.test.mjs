@@ -44,6 +44,9 @@ test("classifier identifies ETFs and commodity products", () => {
   assert.equal(classifyAsset({ symbol: "QQQon", name: "Invesco QQQ" }), "etf");
   assert.equal(classifyAsset({ symbol: "GLDx", name: "Gold xStock" }), "commodity");
   assert.equal(classifyAsset({ symbol: "SLV", name: "iShares Silver Trust" }), "commodity");
+  assert.equal(classifyAsset({ symbol: "XAUT", name: "Tether Gold" }), "commodity");
+  assert.equal(classifyAsset({ symbol: "XAUT0", name: "Tether Gold XAUt0" }), "commodity");
+  assert.equal(classifyAsset({ symbol: "PAXG", name: "Pax Gold" }), "commodity");
   assert.equal(classifyAsset({ symbol: "GDXx", name: "VanEck Gold Miners xStock" }), "etf");
   assert.equal(classifyAsset({ symbol: "NVDAon", name: "NVIDIA Corporation Common Stock" }), "equity");
 });
