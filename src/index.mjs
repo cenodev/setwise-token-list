@@ -3,6 +3,7 @@ import { fetchBStocks } from "./providers/bstocks.mjs";
 import { fetchOndo, fetchOndoSeedAssets } from "./providers/ondo.mjs";
 import { fetchPaxosGold } from "./providers/paxos.mjs";
 import { fetchRobinhood } from "./providers/robinhood.mjs";
+import { fetchSetwiseTestnet } from "./providers/setwise-testnet.mjs";
 import { fetchTetherGold } from "./providers/tether.mjs";
 import { fetchXStocks } from "./providers/xstocks.mjs";
 import { validateTokenList } from "./schema.mjs";
@@ -13,6 +14,7 @@ async function main() {
     fetchOndoProvider(),
     fetchXStocks(),
     fetchRobinhood(),
+    fetchSetwiseTestnet(),
     fetchBStocks(),
     fetchTetherGold(),
     fetchPaxosGold(),
