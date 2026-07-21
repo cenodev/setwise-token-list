@@ -17,6 +17,7 @@ Initial provider adapters:
   first-party Binance/issuer token registry is added.
 - `tether` — includes Tether Gold `XAUT` and official XAUt0 deployment data.
 - `paxos` — includes Pax Gold `PAXG`.
+- `setwise-testnet` — deployed mock bStocks and mock USDT on BNB Smart Chain Testnet.
 
 ## Usage
 
@@ -55,6 +56,9 @@ Each token record contains:
 - `sourceType`
 - `confidence`
 - `fetchedAt`
+
+Mock testnet records also include `logoURI`, pointing to the underlying company's logo (or the
+Roundhill brand for DRAM).
 
 `assetType` is normalized to one of:
 

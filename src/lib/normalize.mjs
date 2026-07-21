@@ -1,6 +1,7 @@
 export const CHAIN_NAMES = new Map([
   [1, "Ethereum"],
   [56, "BNB Smart Chain"],
+  [97, "BNB Smart Chain Testnet"],
   [101, "Solana"],
   [196, "X Layer"],
   [4663, "Robinhood Chain"],
@@ -47,6 +48,7 @@ export function makeToken(input) {
     sourceUrl: input.sourceUrl,
     sourceType: input.sourceType,
     confidence: input.confidence,
+    logoURI: input.logoURI,
     fetchedAt: input.fetchedAt,
   };
 }

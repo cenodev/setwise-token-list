@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { classifyAsset } from "../src/lib/classify.mjs";
 import { validateTokenList } from "../src/schema.mjs";
+import { fetchSetwiseTestnet } from "../src/providers/setwise-testnet.mjs";
 
 test("validator accepts a minimal token list", () => {
   const tokenList = {
@@ -49,4 +50,15 @@ test("classifier identifies ETFs and commodity products", () => {
   assert.equal(classifyAsset({ symbol: "PAXG", name: "Pax Gold" }), "commodity");
   assert.equal(classifyAsset({ symbol: "GDXx", name: "VanEck Gold Miners xStock" }), "etf");
   assert.equal(classifyAsset({ symbol: "NVDAon", name: "NVIDIA Corporation Common Stock" }), "equity");
+});
+
+test("Setwise BSC Testnet provider exposes the deployed mock-token basket", async () => {
+  const { tokens } = await fetchSetwiseTestnet();
+
+  assert.equal(tokens.length, 9);
+  assert.deepEqual(tokens.map(({ symbol }) => symbol), [
+    "mUSDT", "mbSPCX", "mbSNDK", "mbPLTR", "mbQCOM", "mbDRAM", "mbGOOGL", "mbMU", "mbNVDA",
+  ]);
+  assert(tokens.every(({ chainId, network, logoURI }) => chainId === 97 && network === "bsc-testnet" && logoURI));
+  assert.equal(tokens.find(({ symbol }) => symbol === "mbDRAM")?.assetType, "etf");
 });
