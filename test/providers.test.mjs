@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { classifyAsset } from "../src/lib/classify.mjs";
 import { validateTokenList } from "../src/schema.mjs";
 import { fetchSetwiseTestnet } from "../src/providers/setwise-testnet.mjs";
+import { parseRwaXyzPage, RWA_XYZ_CATALOGS } from "../src/providers/rwa-xyz.mjs";
+import { parseAssetRegistry } from "../src/providers/robinhood.mjs";
 
 test("validator accepts a minimal token list", () => {
   const tokenList = {
@@ -61,4 +63,108 @@ test("Setwise BSC Testnet provider exposes the deployed mock-token basket", asyn
   ]);
   assert(tokens.every(({ chainId, network, logoURI }) => chainId === 97 && network === "bsc-testnet" && logoURI));
   assert.equal(tokens.find(({ symbol }) => symbol === "mbDRAM")?.assetType, "etf");
+});
+
+test("RWA.xyz provider catalogs the expanded RWA asset classes", () => {
+  assert.deepEqual(RWA_XYZ_CATALOGS.map(({ assetType }) => assetType), [
+    "treasury",
+    "bond",
+    "commodity",
+    "credit",
+    "real-estate",
+    "private-equity",
+    "fund",
+    "currency",
+    "equity",
+  ]);
+});
+
+test("RWA.xyz parser retains metadata and skips unsupported networks", () => {
+  const payload = {
+    props: {
+      pageProps: {
+        listQueryResponse: {
+          results: [{
+            ticker: "USYC",
+            name: "Circle USYC",
+            description: "Short-duration U.S. Treasury exposure.",
+            icon_url: "https://img.rwa.xyz/usyc.png",
+            tokens: [
+              {
+                network_name: "Ethereum",
+                address: "0x136471a34f6ef19fe571effc1ca711fdb8e49f2b",
+                decimals: 6,
+                standards: ["ERC-20"],
+                hidden: false,
+              },
+              {
+                network_name: "Stellar",
+                address: "USYC-GISSUER",
+                decimals: 7,
+                hidden: false,
+              },
+            ],
+          }],
+        },
+      },
+    },
+  };
+  const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify(payload)}</script>`;
+  const tokens = parseRwaXyzPage(html, {
+    assetType: "treasury",
+    path: "treasuries",
+    fetchedAt: "2026-08-19T00:00:00.000Z",
+  });
+
+  assert.equal(tokens.length, 1);
+  assert.deepEqual(tokens[0], {
+    id: "rwa-xyz:1:0x136471a34f6ef19fe571effc1ca711fdb8e49f2b",
+    provider: "rwa-xyz",
+    symbol: "USYC",
+    name: "Circle USYC",
+    underlyingSymbol: "USYC",
+    assetType: "treasury",
+    tokenStandard: "ERC-20",
+    chainId: 1,
+    chainName: "Ethereum",
+    network: "ethereum",
+    address: "0x136471a34f6ef19fe571effc1ca711fdb8e49f2b",
+    decimals: 6,
+    sourceUrl: "https://app.rwa.xyz/treasuries",
+    sourceType: "third-party-analytics-catalog",
+    confidence: "third-party-listing",
+    description: "Short-duration U.S. Treasury exposure.",
+    logoURI: "https://img.rwa.xyz/usyc.png",
+    fetchedAt: "2026-08-19T00:00:00.000Z",
+  });
+});
+
+test("Robinhood registry parser imports current active stock tokens with logos", () => {
+  const tokens = parseAssetRegistry({
+    assets: [
+      {
+        tokenSymbol: "CRM",
+        tokenName: "Salesforce • Robinhood Token",
+        deployments: [{
+          contractAddress: "0xd95B44124e475743a7589e68F3D74008A5536D44",
+          chainId: 4663,
+          networkName: "Robinhood Chain",
+        }],
+        logoUrl: "https://cdn.robinhood.com/ncw_assets/logos/crm.png",
+        status: "ASSET_STATUS_ACTIVE",
+        tokenDecimals: 18,
+      },
+      {
+        tokenSymbol: "OLD",
+        deployments: [{ contractAddress: "0x0000000000000000000000000000000000000001", chainId: 4663 }],
+        status: "ASSET_STATUS_INACTIVE",
+      },
+    ],
+  }, "2026-08-19T00:00:00.000Z");
+
+  assert.equal(tokens.length, 1);
+  assert.equal(tokens[0].symbol, "CRM");
+  assert.equal(tokens[0].address, "0xd95b44124e475743a7589e68f3d74008a5536d44");
+  assert.equal(tokens[0].logoURI, "https://cdn.robinhood.com/ncw_assets/logos/crm.png");
+  assert.equal(tokens[0].sourceType, "official-provider-api");
 });
