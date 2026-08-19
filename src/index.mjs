@@ -3,10 +3,12 @@ import { fetchBStocks } from "./providers/bstocks.mjs";
 import { fetchOndo, fetchOndoSeedAssets } from "./providers/ondo.mjs";
 import { fetchPaxosGold } from "./providers/paxos.mjs";
 import { fetchRobinhood } from "./providers/robinhood.mjs";
+import { fetchRwaXyz } from "./providers/rwa-xyz.mjs";
 import { fetchSetwiseTestnet } from "./providers/setwise-testnet.mjs";
 import { fetchTetherGold } from "./providers/tether.mjs";
 import { fetchXStocks } from "./providers/xstocks.mjs";
 import { validateTokenList } from "./schema.mjs";
+import { deploymentKey } from "./lib/normalize.mjs";
 
 async function main() {
   const fetchOndoProvider = process.env.ONDO_FULL === "1" ? fetchOndo : fetchOndoSeedAssets;
@@ -18,20 +20,43 @@ async function main() {
     fetchBStocks(),
     fetchTetherGold(),
     fetchPaxosGold(),
+    fetchRwaXyz(),
   ]);
+
+  // Providers are ordered by authority. Keep the first record when a
+  // third-party catalog repeats an issuer-verified chain/address deployment.
+  const seenDeployments = new Set();
+  const canonicalDeployments = new Map();
+  const deduplicatedProviders = providers.map((result) => ({
+    ...result,
+    tokens: result.tokens.filter((token) => {
+      const key = deploymentKey(token);
+      if (seenDeployments.has(key)) {
+        const canonical = canonicalDeployments.get(key);
+        if (canonical && token.provider === "rwa-xyz") {
+          if (!canonical.description && token.description) canonical.description = token.description;
+          if (!canonical.logoURI && token.logoURI) canonical.logoURI = token.logoURI;
+        }
+        return false;
+      }
+      seenDeployments.add(key);
+      canonicalDeployments.set(key, token);
+      return true;
+    }),
+  }));
 
   const generatedAt = new Date().toISOString();
   const tokenList = {
     name: "Setwise Token List",
     version: "0.1.0",
     generatedAt,
-    providers: providers.map(({ provider, sourceUrl, fetchedAt, tokens }) => ({
+    providers: deduplicatedProviders.map(({ provider, sourceUrl, fetchedAt, tokens }) => ({
       provider,
       sourceUrl,
       fetchedAt,
       tokenCount: tokens.length,
     })),
-    tokens: providers.flatMap(({ tokens }) => tokens)
+    tokens: deduplicatedProviders.flatMap(({ tokens }) => tokens)
       .sort((a, b) => `${a.provider}:${a.symbol}:${a.chainId}`.localeCompare(`${b.provider}:${b.symbol}:${b.chainId}`)),
   };
 

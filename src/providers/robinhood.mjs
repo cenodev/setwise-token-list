@@ -4,6 +4,7 @@ import { makeToken, uniqueById } from "../lib/normalize.mjs";
 
 const CONTRACTS_URL = "https://docs.robinhood.com/chain/contracts";
 const TOKEN_CONTRACTS_URL = "https://docs.robinhood.com/chain/stock-tokens/token-contracts/";
+const ASSET_REGISTRY_URL = "https://api.robinhood.com/rhj/assets";
 
 function decodeRouteContent(bundle, path) {
   const pathIndex = bundle.indexOf(`path:"${path}"`);
@@ -51,6 +52,38 @@ function parseTokenTable(markdown, fetchedAt) {
   return tokens;
 }
 
+export function parseAssetRegistry(payload, fetchedAt) {
+  if (!Array.isArray(payload?.assets)) throw new Error("Robinhood asset registry returned an invalid payload");
+
+  return payload.assets.flatMap((asset) => {
+    if (asset.status && asset.status !== "ASSET_STATUS_ACTIVE") return [];
+    const symbol = String(asset.tokenSymbol ?? "").trim();
+    if (!symbol) return [];
+
+    return (asset.deployments ?? []).flatMap((deployment) => {
+      if (deployment.chainId !== 4663 || typeof deployment.contractAddress !== "string") return [];
+      return makeToken({
+        provider: "robinhood",
+        symbol,
+        name: asset.tokenName ?? `${symbol} Robinhood Stock Token`,
+        underlyingSymbol: symbol,
+        assetType: classifyAsset({ name: asset.tokenName, symbol }),
+        tokenStandard: "ERC-20",
+        chainId: 4663,
+        chainName: deployment.networkName ?? "Robinhood Chain",
+        network: "robinhood-chain",
+        address: deployment.contractAddress,
+        decimals: typeof asset.tokenDecimals === "number" ? asset.tokenDecimals : 18,
+        sourceUrl: CONTRACTS_URL,
+        sourceType: "official-provider-api",
+        confidence: "official",
+        logoURI: asset.logoUrl,
+        fetchedAt,
+      });
+    });
+  });
+}
+
 export async function fetchRobinhood() {
   const fetchedAt = new Date().toISOString();
   const html = await fetchText(TOKEN_CONTRACTS_URL);
@@ -60,11 +93,17 @@ export async function fetchRobinhood() {
   const bundle = await fetchText(new URL(scriptUrl, TOKEN_CONTRACTS_URL).href);
   const markdown = decodeRouteContent(bundle, "/chain/contracts");
   if (!markdown) throw new Error("Could not find Robinhood contract docs content");
+  const registry = JSON.parse(await fetchText(ASSET_REGISTRY_URL, {
+    headers: { accept: "application/json" },
+  }));
 
   return {
     provider: "robinhood",
     sourceUrl: CONTRACTS_URL,
     fetchedAt,
-    tokens: uniqueById(parseTokenTable(markdown, fetchedAt)),
+    tokens: uniqueById([
+      ...parseTokenTable(markdown, fetchedAt),
+      ...parseAssetRegistry(registry, fetchedAt),
+    ]),
   };
 }

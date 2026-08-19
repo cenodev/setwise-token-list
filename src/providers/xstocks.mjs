@@ -33,6 +33,8 @@ function chainIdForNetwork(network) {
     bsc: 56,
     mantle: 5000,
     xLayer: 196,
+    arbitrum: 42161,
+    optimism: 10,
   }[network];
 }
 
@@ -64,6 +66,7 @@ export async function fetchXStocks() {
       sourceUrl: PRODUCTS_URL,
       sourceType: "official-provider-page",
       confidence: "official",
+      logoURI: product.iconUrl,
       fetchedAt,
     });
   }));
