@@ -59,11 +59,14 @@ test("validator rejects non-stock assets", () => {
   assert(validateTokenList({ providers: [], tokens: [token] }).some((error) => error.includes("must be equity")));
 });
 
-test("Coinbase provider exposes the launched B20 stocks on Base", async () => {
+test("Coinbase provider exposes every B20 stock in the Base integration registry", async () => {
   const { sourceUrl, tokens } = await fetchCoinbase();
 
-  assert.equal(sourceUrl, "https://www.base.org/stocks");
-  assert.deepEqual(tokens.map(({ symbol }) => symbol), ["AAPLc", "GOOGLc", "METAc", "NVDAc"]);
+  assert.equal(sourceUrl, "https://docs.base.org/base-chain/specs/reference/b20/tokenized-stocks-on-base");
+  assert.deepEqual(tokens.map(({ symbol }) => symbol), [
+    "AAPLc", "AMZNc", "COINc", "CRCLc", "GOOGLc", "INTCc", "METAc",
+    "MSFTc", "MSTRc", "NVDAc", "SNDKc", "SPCXc", "TSLAc",
+  ]);
   assert(tokens.every((token) => (
     token.provider === "coinbase"
     && token.assetType === "equity"
@@ -72,6 +75,7 @@ test("Coinbase provider exposes the launched B20 stocks on Base", async () => {
     && token.network === "base"
     && token.decimals === 8
     && token.confidence === "official"
+    && token.sourceType === "official-provider-docs"
   )));
 });
 

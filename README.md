@@ -10,7 +10,7 @@ metadata so Setwise services can distinguish canonical assets from lookalike tok
 
 Initial provider adapters:
 
-- `coinbase` — official Coinbase Tokenized Stocks launched as B20 tokens on Base.
+- `coinbase` — all Coinbase B20 stocks in Base's official integration registry.
 - `ondo` — fetched from Ondo app sitemap and asset pages.
 - `xstocks` — fetched from the official xStocks products page.
 - `robinhood` — fetched from Robinhood Chain token-contract docs and the official on-chain asset
