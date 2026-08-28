@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { classifyAsset } from "../src/lib/classify.mjs";
 import { validateTokenList } from "../src/schema.mjs";
 import { fetchSetwiseTestnet } from "../src/providers/setwise-testnet.mjs";
+import { parseAssetPage } from "../src/providers/ondo.mjs";
 import { parseRwaXyzPage, RWA_XYZ_CATALOGS } from "../src/providers/rwa-xyz.mjs";
 import { parseAssetRegistry } from "../src/providers/robinhood.mjs";
 
@@ -52,6 +53,15 @@ test("classifier identifies ETFs and commodity products", () => {
   assert.equal(classifyAsset({ symbol: "PAXG", name: "Pax Gold" }), "commodity");
   assert.equal(classifyAsset({ symbol: "GDXx", name: "VanEck Gold Miners xStock" }), "etf");
   assert.equal(classifyAsset({ symbol: "NVDAon", name: "NVIDIA Corporation Common Stock" }), "equity");
+});
+
+test("Ondo parser derives the underlying ticker from the token symbol", () => {
+  const html = String.raw`{\"symbol\":\"AAPLon\",\"ticker\":\"Ticker\",\"underlyingName\":\"Apple Inc. Common Stock\",\"supportedNetworks\":[{\"network\":\"ETHEREUM\",\"chainId\":1,\"address\":\"0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c\",\"decimals\":18}],\"description\":\"Apple\"}`;
+  const tokens = parseAssetPage(html, "https://app.ondo.finance/assets/aaplon", "2026-08-19T00:00:00.000Z");
+
+  assert.equal(tokens.length, 1);
+  assert.equal(tokens[0].symbol, "AAPLon");
+  assert.equal(tokens[0].underlyingSymbol, "AAPL");
 });
 
 test("Setwise BSC Testnet provider exposes the deployed mock-token basket", async () => {

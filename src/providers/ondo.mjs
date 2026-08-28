@@ -11,13 +11,16 @@ function assetUrlsFromSitemap(xml) {
     .sort();
 }
 
-function parseAssetPage(html, sourceUrl, fetchedAt) {
+export function parseAssetPage(html, sourceUrl, fetchedAt) {
   const symbol = html.match(/\\"symbol\\":\\"([^"]+on)\\"/u)?.[1];
-  const ticker = html.match(/\\"ticker\\":\\"([^"]+)\\"/u)?.[1];
   const underlyingName = html.match(/\\"underlyingName\\":\\"([^"]+)\\"/u)?.[1];
   const networksMatch = html.match(/\\"supportedNetworks\\":\[(?<json>.*?)\],\\"description\\"/u);
 
   if (!symbol || !networksMatch?.groups?.json) return [];
+
+  // Ondo's payload also contains UI metadata such as ticker: "Ticker".
+  // Derive the asset ticker from the canonical token symbol instead.
+  const ticker = symbol.replace(/on$/u, "");
 
   const supportedNetworks = JSON.parse(`[${networksMatch.groups.json.replaceAll('\\"', '"')}]`);
   return supportedNetworks.map((network) => makeToken({
