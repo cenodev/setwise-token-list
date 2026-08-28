@@ -12,8 +12,8 @@ export function validateTokenList(tokenList) {
         errors.push(`${prefix}.${field} is required`);
       }
     }
-    if (!["bond", "commodity", "credit", "crypto", "currency", "equity", "etf", "fund", "private-equity", "real-estate", "treasury"].includes(token.assetType)) {
-      errors.push(`${prefix}.assetType must be one of bond, commodity, credit, crypto, currency, equity, etf, fund, private-equity, real-estate, treasury`);
+    if (token.assetType !== "equity") {
+      errors.push(`${prefix}.assetType must be equity`);
     }
     if (ids.has(token.id)) errors.push(`${prefix}.id duplicates ${token.id}`);
     ids.add(token.id);

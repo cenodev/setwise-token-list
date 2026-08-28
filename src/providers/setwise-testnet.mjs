@@ -4,14 +4,6 @@ const DEPLOYMENT_URL = "https://github.com/cenodev/setwise-contracts/blob/main/d
 
 const TESTNET_TOKENS = [
   {
-    symbol: "mUSDT",
-    name: "Mock Tether USD",
-    underlyingSymbol: "USDT",
-    assetType: "currency",
-    address: "0x0827541D8d43Bb891865440B50e6713D4C55be5A",
-    logoURI: "https://cdn.simpleicons.org/tether",
-  },
-  {
     symbol: "mbSPCX",
     name: "Mock SpaceX bStock",
     underlyingSymbol: "SPCX",
@@ -42,14 +34,6 @@ const TESTNET_TOKENS = [
     assetType: "equity",
     address: "0xcA60A189a5Edb00549FFD05cF855AFEb7E42e366",
     logoURI: "https://cdn.simpleicons.org/qualcomm",
-  },
-  {
-    symbol: "mbDRAM",
-    name: "Mock Roundhill Memory ETF bStock",
-    underlyingSymbol: "DRAM",
-    assetType: "etf",
-    address: "0xcFd38Ce016Bf57997A238c67Eb591b9182307471",
-    logoURI: "https://www.roundhillinvestments.com/favicon.ico",
   },
   {
     symbol: "mbGOOGL",
