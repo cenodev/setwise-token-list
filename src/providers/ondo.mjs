@@ -60,7 +60,7 @@ export async function fetchOndo({ limit } = {}) {
 
 export async function fetchOndoSeedAssets() {
   const fetchedAt = new Date().toISOString();
-  const slugs = ["spyon", "qqqon", "nvdaon", "tslaon", "aaplon", "msfton", "amznon", "googlon"];
+  const slugs = ["nvdaon", "tslaon", "aaplon", "msfton", "amznon", "googlon"];
   const tokens = [];
 
   for (const slug of slugs) {

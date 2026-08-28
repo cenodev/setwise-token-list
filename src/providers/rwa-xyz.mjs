@@ -4,14 +4,6 @@ import { makeToken, uniqueById } from "../lib/normalize.mjs";
 const RWA_XYZ_BASE_URL = "https://app.rwa.xyz";
 
 export const RWA_XYZ_CATALOGS = [
-  { path: "treasuries", assetType: "treasury" },
-  { path: "government-bonds", assetType: "bond" },
-  { path: "commodities", assetType: "commodity" },
-  { path: "credit", assetType: "credit" },
-  { path: "real-estate", assetType: "real-estate" },
-  { path: "private-equity-venture-capital", assetType: "private-equity" },
-  { path: "active-strategies", assetType: "fund" },
-  { path: "stablecoins", assetType: "currency" },
   { path: "stocks", assetType: "equity" },
 ];
 

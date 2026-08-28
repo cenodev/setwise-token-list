@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { classifyAsset } from "../src/lib/classify.mjs";
 import { validateTokenList } from "../src/schema.mjs";
+import { fetchCoinbase } from "../src/providers/coinbase.mjs";
 import { fetchSetwiseTestnet } from "../src/providers/setwise-testnet.mjs";
 import { parseRwaXyzPage, RWA_XYZ_CATALOGS } from "../src/providers/rwa-xyz.mjs";
 import { parseAssetRegistry } from "../src/providers/robinhood.mjs";
@@ -42,6 +43,42 @@ test("validator rejects duplicate ids", () => {
   assert(errors.some((error) => error.includes("duplicates")));
 });
 
+test("validator rejects non-stock assets", () => {
+  const token = {
+    id: "demo:1:0x0000000000000000000000000000000000000001",
+    provider: "demo",
+    symbol: "DEMO",
+    assetType: "etf",
+    chainId: 1,
+    address: "0x0000000000000000000000000000000000000001",
+    decimals: 18,
+    sourceUrl: "https://example.com",
+    confidence: "official",
+  };
+
+  assert(validateTokenList({ providers: [], tokens: [token] }).some((error) => error.includes("must be equity")));
+});
+
+test("Coinbase provider exposes every B20 stock in the Base integration registry", async () => {
+  const { sourceUrl, tokens } = await fetchCoinbase();
+
+  assert.equal(sourceUrl, "https://docs.base.org/base-chain/specs/reference/b20/tokenized-stocks-on-base");
+  assert.deepEqual(tokens.map(({ symbol }) => symbol), [
+    "AAPLc", "AMZNc", "COINc", "CRCLc", "GOOGLc", "INTCc", "METAc",
+    "MSFTc", "MSTRc", "NVDAc", "SNDKc", "SPCXc", "TSLAc",
+  ]);
+  assert(tokens.every((token) => (
+    token.provider === "coinbase"
+    && token.assetType === "equity"
+    && token.tokenStandard === "B20"
+    && token.chainId === 8453
+    && token.network === "base"
+    && token.decimals === 8
+    && token.confidence === "official"
+    && token.sourceType === "official-provider-docs"
+  )));
+});
+
 test("classifier identifies ETFs and commodity products", () => {
   assert.equal(classifyAsset({ symbol: "SPYx", name: "SP500 xStock" }), "etf");
   assert.equal(classifyAsset({ symbol: "QQQon", name: "Invesco QQQ" }), "etf");
@@ -54,29 +91,19 @@ test("classifier identifies ETFs and commodity products", () => {
   assert.equal(classifyAsset({ symbol: "NVDAon", name: "NVIDIA Corporation Common Stock" }), "equity");
 });
 
-test("Setwise BSC Testnet provider exposes the deployed mock-token basket", async () => {
+test("Setwise BSC Testnet provider exposes the stock-only mock-token basket", async () => {
   const { tokens } = await fetchSetwiseTestnet();
 
-  assert.equal(tokens.length, 9);
+  assert.equal(tokens.length, 7);
   assert.deepEqual(tokens.map(({ symbol }) => symbol), [
-    "mUSDT", "mbSPCX", "mbSNDK", "mbPLTR", "mbQCOM", "mbDRAM", "mbGOOGL", "mbMU", "mbNVDA",
+    "mbSPCX", "mbSNDK", "mbPLTR", "mbQCOM", "mbGOOGL", "mbMU", "mbNVDA",
   ]);
   assert(tokens.every(({ chainId, network, logoURI }) => chainId === 97 && network === "bsc-testnet" && logoURI));
-  assert.equal(tokens.find(({ symbol }) => symbol === "mbDRAM")?.assetType, "etf");
+  assert(tokens.every(({ assetType }) => assetType === "equity"));
 });
 
-test("RWA.xyz provider catalogs the expanded RWA asset classes", () => {
-  assert.deepEqual(RWA_XYZ_CATALOGS.map(({ assetType }) => assetType), [
-    "treasury",
-    "bond",
-    "commodity",
-    "credit",
-    "real-estate",
-    "private-equity",
-    "fund",
-    "currency",
-    "equity",
-  ]);
+test("RWA.xyz provider only catalogs stocks", () => {
+  assert.deepEqual(RWA_XYZ_CATALOGS, [{ path: "stocks", assetType: "equity" }]);
 });
 
 test("RWA.xyz parser retains metadata and skips unsupported networks", () => {

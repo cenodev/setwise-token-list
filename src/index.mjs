@@ -1,11 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { fetchBStocks } from "./providers/bstocks.mjs";
+import { fetchCoinbase } from "./providers/coinbase.mjs";
 import { fetchOndo, fetchOndoSeedAssets } from "./providers/ondo.mjs";
-import { fetchPaxosGold } from "./providers/paxos.mjs";
 import { fetchRobinhood } from "./providers/robinhood.mjs";
 import { fetchRwaXyz } from "./providers/rwa-xyz.mjs";
 import { fetchSetwiseTestnet } from "./providers/setwise-testnet.mjs";
-import { fetchTetherGold } from "./providers/tether.mjs";
 import { fetchXStocks } from "./providers/xstocks.mjs";
 import { validateTokenList } from "./schema.mjs";
 import { deploymentKey } from "./lib/normalize.mjs";
@@ -13,13 +12,12 @@ import { deploymentKey } from "./lib/normalize.mjs";
 async function main() {
   const fetchOndoProvider = process.env.ONDO_FULL === "1" ? fetchOndo : fetchOndoSeedAssets;
   const providers = await Promise.all([
+    fetchCoinbase(),
     fetchOndoProvider(),
     fetchXStocks(),
     fetchRobinhood(),
     fetchSetwiseTestnet(),
     fetchBStocks(),
-    fetchTetherGold(),
-    fetchPaxosGold(),
     fetchRwaXyz(),
   ]);
 
@@ -29,7 +27,7 @@ async function main() {
   const canonicalDeployments = new Map();
   const deduplicatedProviders = providers.map((result) => ({
     ...result,
-    tokens: result.tokens.filter((token) => {
+    tokens: result.tokens.filter((token) => token.assetType === "equity").filter((token) => {
       const key = deploymentKey(token);
       if (seenDeployments.has(key)) {
         const canonical = canonicalDeployments.get(key);
