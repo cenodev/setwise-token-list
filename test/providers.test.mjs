@@ -176,6 +176,76 @@ test("RWA.xyz parser retains metadata and skips unsupported networks", () => {
   });
 });
 
+test("RWA.xyz parser attributes scraped tokens to their issuing protocol", () => {
+  const payload = {
+    props: {
+      pageProps: {
+        listQueryResponse: {
+          results: [
+            {
+              ticker: "CRCLon",
+              name: "Circle Internet Group (Ondo Tokenized)",
+              pegged_asset: { ticker: "CRCL", name: "Circle Internet Group" },
+              tokens: [{
+                network_name: "Ethereum",
+                address: "0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c",
+                decimals: 18,
+                standards: ["ERC-20"],
+                protocol_name: "Ondo",
+                hidden: false,
+              }],
+            },
+            {
+              ticker: "CRCLx",
+              name: "Circle xStock",
+              pegged_asset: { ticker: "CRCL", name: "Circle Internet Group" },
+              tokens: [{
+                network_name: "HyperEVM",
+                address: "0x2494b603319d4d9f9715c9f4496d9e0364b59d93",
+                decimals: 18,
+                standards: ["ERC-20"],
+                protocol_name: "Backed Finance (xStocks)",
+                hidden: false,
+              }],
+            },
+            {
+              ticker: "QQQB",
+              name: "Invesco QQQ Trust (bStocks)",
+              pegged_asset: { ticker: "QQQ", name: "The Invesco QQQ Trust" },
+              tokens: [{
+                network_name: "BNB Chain",
+                address: "0x390a684ef9cade28a7ad0dfa61ab1eb3842618c4",
+                decimals: 18,
+                standards: ["ERC-20"],
+                protocol_name: "bStocks",
+                hidden: false,
+              }],
+            },
+          ],
+        },
+      },
+    },
+  };
+  const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify(payload)}</script>`;
+  const tokens = parseRwaXyzPage(html, {
+    assetType: "equity",
+    path: "stocks",
+    fetchedAt: "2026-08-28T00:00:00.000Z",
+  });
+
+  assert.equal(tokens.length, 3);
+  assert.equal(tokens[0].symbol, "CRCLon");
+  assert.equal(tokens[0].underlyingSymbol, "CRCL");
+  assert.equal(tokens[0].provider, "ondo");
+  assert.equal(tokens[0].id, "ondo:1:0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c");
+  assert.equal(tokens[1].symbol, "CRCLx");
+  assert.equal(tokens[1].underlyingSymbol, "CRCL");
+  assert.equal(tokens[1].provider, "xstocks");
+  assert.equal(tokens[2].symbol, "QQQB");
+  assert.equal(tokens[2].underlyingSymbol, "QQQ");
+  assert.equal(tokens[2].provider, "bstocks");
+});
+
 test("Robinhood registry parser imports current active stock tokens with logos", () => {
   const tokens = parseAssetRegistry({
     assets: [

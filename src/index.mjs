@@ -25,13 +25,13 @@ async function main() {
   // third-party catalog repeats an issuer-verified chain/address deployment.
   const seenDeployments = new Set();
   const canonicalDeployments = new Map();
-  const deduplicatedProviders = providers.map((result) => ({
-    ...result,
-    tokens: result.tokens.filter((token) => token.assetType === "equity").filter((token) => {
+  const deduplicatedTokens = providers.flatMap((result) => result.tokens
+    .filter((token) => token.assetType === "equity")
+    .filter((token) => {
       const key = deploymentKey(token);
       if (seenDeployments.has(key)) {
         const canonical = canonicalDeployments.get(key);
-        if (canonical && token.provider === "rwa-xyz") {
+        if (canonical && token.sourceType === "third-party-analytics-catalog") {
           if (!canonical.description && token.description) canonical.description = token.description;
           if (!canonical.logoURI && token.logoURI) canonical.logoURI = token.logoURI;
         }
@@ -40,21 +40,41 @@ async function main() {
       seenDeployments.add(key);
       canonicalDeployments.set(key, token);
       return true;
-    }),
-  }));
+    }));
+
+  // Scraped catalogs attribute tokens to their issuing protocol, so group the
+  // final provider metadata by token provider rather than scrape source.
+  const providerSources = new Map(providers.map((result) => [
+    result.provider,
+    { sourceUrl: result.sourceUrl, fetchedAt: result.fetchedAt },
+  ]));
+  const scrapedSource = providerSources.get("rwa-xyz");
+  const providerOrder = providers.map((result) => result.provider);
+  const tokensByProvider = new Map();
+  for (const token of deduplicatedTokens) {
+    tokensByProvider.set(token.provider, [...(tokensByProvider.get(token.provider) ?? []), token]);
+  }
+  const providerMetadata = [...tokensByProvider.entries()]
+    .sort(([a], [b]) => {
+      const rank = (provider) => {
+        const index = providerOrder.indexOf(provider);
+        return index === -1 ? providerOrder.length : index;
+      };
+      return rank(a) - rank(b) || a.localeCompare(b);
+    })
+    .map(([provider, tokens]) => ({
+      provider,
+      ...(providerSources.get(provider) ?? scrapedSource),
+      tokenCount: tokens.length,
+    }));
 
   const generatedAt = new Date().toISOString();
   const tokenList = {
     name: "Setwise Token List",
     version: "0.1.0",
     generatedAt,
-    providers: deduplicatedProviders.map(({ provider, sourceUrl, fetchedAt, tokens }) => ({
-      provider,
-      sourceUrl,
-      fetchedAt,
-      tokenCount: tokens.length,
-    })),
-    tokens: deduplicatedProviders.flatMap(({ tokens }) => tokens)
+    providers: providerMetadata,
+    tokens: deduplicatedTokens
       .sort((a, b) => `${a.provider}:${a.symbol}:${a.chainId}`.localeCompare(`${b.provider}:${b.symbol}:${b.chainId}`)),
   };
 
