@@ -53,6 +53,33 @@ function tokenStandard(token, network) {
   return token.standards?.[0] ?? "ERC-20";
 }
 
+// RWA.xyz tickers carry wrapper suffixes (CRCLon, CRCLx, CRCLB). The catalog's
+// pegged_asset references the canonical underlying security, so prefer it and
+// fall back to suffix inference in makeToken when it is absent.
+function underlyingTicker(asset) {
+  const pegged = asset.pegged_asset?.ticker;
+  if (typeof pegged !== "string") return undefined;
+  const trimmed = pegged.trim();
+  return trimmed || undefined;
+}
+
+// RWA.xyz is a scraping source, not an issuer. Attribute each deployment to the
+// protocol that actually issued the tokenized stock.
+const PROTOCOL_PROVIDERS = new Map([
+  ["ondo", "ondo"],
+  ["backed finance (xstocks)", "xstocks"],
+  ["bstocks", "bstocks"],
+  ["securitize", "securitize"],
+  ["figure", "figure"],
+  ["superstate opening bell", "superstate"],
+]);
+
+export function providerForProtocol(protocolName) {
+  if (typeof protocolName !== "string") return "rwa-xyz";
+  const normalized = protocolName.replace(/\s+/gu, " ").trim().toLowerCase();
+  return PROTOCOL_PROVIDERS.get(normalized) ?? "rwa-xyz";
+}
+
 export function parseRwaXyzPage(html, { assetType, path, fetchedAt }) {
   const data = extractNextData(html);
   const assets = data.props?.pageProps?.listQueryResponse?.results;
@@ -68,10 +95,10 @@ export function parseRwaXyzPage(html, { assetType, path, fetchedAt }) {
     if (!symbol) return [];
 
     return makeToken({
-      provider: "rwa-xyz",
+      provider: providerForProtocol(token.protocol_name),
       symbol,
       name: asset.name ?? token.name ?? symbol,
-      underlyingSymbol: symbol,
+      underlyingSymbol: underlyingTicker(asset),
       assetType,
       tokenStandard: tokenStandard(token, network.network),
       chainId: network.chainId,
