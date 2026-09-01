@@ -8,6 +8,7 @@ import { fetchSetwiseTestnet } from "./providers/setwise-testnet.mjs";
 import { fetchXStocks } from "./providers/xstocks.mjs";
 import { validateTokenList } from "./schema.mjs";
 import { deploymentKey } from "./lib/normalize.mjs";
+import { addUnderlyingLogoURIs, loadUnderlyingLogoSymbols } from "./lib/underlying-logos.mjs";
 
 async function main() {
   const fetchOndoProvider = process.env.ONDO_FULL === "1" ? fetchOndo : fetchOndoSeedAssets;
@@ -69,12 +70,13 @@ async function main() {
     }));
 
   const generatedAt = new Date().toISOString();
+  const underlyingLogoSymbols = await loadUnderlyingLogoSymbols();
   const tokenList = {
     name: "Setwise Token List",
     version: "0.1.0",
     generatedAt,
     providers: providerMetadata,
-    tokens: deduplicatedTokens
+    tokens: addUnderlyingLogoURIs(deduplicatedTokens, underlyingLogoSymbols)
       .sort((a, b) => `${a.provider}:${a.symbol}:${a.chainId}`.localeCompare(`${b.provider}:${b.symbol}:${b.chainId}`)),
   };
 

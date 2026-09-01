@@ -7,6 +7,10 @@ import { fetchSetwiseTestnet } from "../src/providers/setwise-testnet.mjs";
 import { parseAssetPage } from "../src/providers/ondo.mjs";
 import { parseRwaXyzPage, RWA_XYZ_CATALOGS } from "../src/providers/rwa-xyz.mjs";
 import { parseAssetRegistry } from "../src/providers/robinhood.mjs";
+import {
+  addUnderlyingLogoURIs,
+  UNDERLYING_LOGO_BASE_URL,
+} from "../src/lib/underlying-logos.mjs";
 
 test("validator accepts a minimal token list", () => {
   const tokenList = {
@@ -58,6 +62,34 @@ test("validator rejects non-stock assets", () => {
   };
 
   assert(validateTokenList({ providers: [], tokens: [token] }).some((error) => error.includes("must be equity")));
+});
+
+test("underlying logos are applied by exact ticker match", () => {
+  const tokens = addUnderlyingLogoURIs([
+    { symbol: "AAPLon", underlyingSymbol: "AAPL" },
+    { symbol: "METAc", underlyingSymbol: "META", underlyingLogoURI: "https://example.com/stale.webp" },
+  ], new Set(["AAPL"]));
+
+  assert.equal(tokens[0].underlyingLogoURI, `${UNDERLYING_LOGO_BASE_URL}/AAPL.webp`);
+  assert.equal(tokens[1].underlyingLogoURI, undefined);
+});
+
+test("validator rejects an invalid underlying logo URL", () => {
+  const token = {
+    id: "demo:1:0x0000000000000000000000000000000000000001",
+    provider: "demo",
+    symbol: "DEMO",
+    assetType: "equity",
+    chainId: 1,
+    address: "0x0000000000000000000000000000000000000001",
+    decimals: 18,
+    sourceUrl: "https://example.com",
+    confidence: "official",
+    underlyingLogoURI: "not-a-url",
+  };
+
+  assert(validateTokenList({ providers: [], tokens: [token] })
+    .some((error) => error.includes("underlyingLogoURI must be a valid URL")));
 });
 
 test("Coinbase provider exposes every B20 stock in the Base integration registry", async () => {

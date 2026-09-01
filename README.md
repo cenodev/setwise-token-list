@@ -60,7 +60,11 @@ Each token record contains:
 - `confidence`
 - `fetchedAt`
 
-Where available, records also contain `description` and `logoURI`. RWA.xyz records are marked as
+Where available, records also contain `description`, `logoURI`, and `underlyingLogoURI`.
+`underlyingLogoURI` points to a ticker-named WebP file in this repository's `assets` directory.
+Run `npm run logos:apply` after adding or removing assets to synchronize the generated token list.
+
+RWA.xyz records are marked as
 third-party listings; their asset logo falls back to the protocol, platform, issuer, or manager
 logo when a dedicated token image is unavailable. An official record may also inherit missing
 description or logo metadata when RWA.xyz catalogs the exact same chain/address deployment.

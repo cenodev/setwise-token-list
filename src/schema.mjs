@@ -19,6 +19,14 @@ export function validateTokenList(tokenList) {
     ids.add(token.id);
     if (typeof token.chainId !== "number") errors.push(`${prefix}.chainId must be a number`);
     if (typeof token.decimals !== "number") errors.push(`${prefix}.decimals must be a number`);
+    if (token.underlyingLogoURI !== undefined) {
+      try {
+        const url = new URL(token.underlyingLogoURI);
+        if (url.protocol !== "https:") errors.push(`${prefix}.underlyingLogoURI must use HTTPS`);
+      } catch {
+        errors.push(`${prefix}.underlyingLogoURI must be a valid URL`);
+      }
+    }
     if (token.address.startsWith?.("0x") && !/^0x[a-f0-9]{40}$/u.test(token.address)) {
       errors.push(`${prefix}.address must be a normalized lowercase EVM address`);
     }

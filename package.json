@@ -6,6 +6,7 @@
   "scripts": {
     "fetch": "node src/index.mjs",
     "fetch:ondo:full": "ONDO_FULL=1 node src/index.mjs",
+    "logos:apply": "node src/apply-underlying-logos.mjs",
     "test": "node --test",
     "validate": "node src/validate.mjs data/token-list.json"
   },
